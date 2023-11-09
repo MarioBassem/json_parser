@@ -125,3 +125,74 @@ func TestGetString(t *testing.T) {
 		})
 	}
 }
+
+func TestGetValue(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected bool
+		value    interface{}
+	}{
+		"empty": {
+			input:    "",
+			expected: false,
+			value:    nil,
+		},
+		"not_ended_string": {
+			input:    `\"abc`,
+			expected: false,
+			value:    nil,
+		},
+		"not_ended_array": {
+			input:    `[1234,562`,
+			expected: false,
+			value:    nil,
+		},
+		"true_value": {
+			input:    "true ",
+			expected: true,
+			value:    true,
+		},
+		"false_value": {
+			input:    "false ",
+			expected: true,
+			value:    false,
+		},
+		"null_value": {
+			input:    "null ",
+			expected: true,
+			value:    nil,
+		},
+		"unqoutoed_string": {
+			input:    "hamada",
+			expected: false,
+			value:    nil,
+		},
+		"valid_string": {
+			input:    `"hello world"`,
+			expected: true,
+			value:    "hello world",
+		},
+		"valid_array": {
+			input:    `[1,2,3]`,
+			expected: true,
+			value:    []interface{}{float64(1), float64(2), float64(3)},
+		},
+		"valid_number": {
+			input:    "-0.234e5 ",
+			expected: true,
+			value:    -0.234e5,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := Parser{b: []byte(tc.input)}
+			val, err := p.getValue()
+			if tc.expected {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.value, val)
+			}
+
+		})
+	}
+}
