@@ -22,19 +22,23 @@ type parser struct {
 	b []byte
 }
 
+// Parse parses json text to a map[string]interface{}.
+// all numbers are treated as float64 values.
 func Parse(b []byte) (map[string]interface{}, error) {
 	p := parser{b: b}
-	return p.getObject()
+	val, err := p.getObject()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(p.b) > 0 {
+		return nil, fmt.Errorf("invalid character '%c' after top-level value", p.b[0])
+	}
+
+	return val, nil
 }
 
 func (p *parser) getObject() (map[string]interface{}, error) {
-	// get openning curly brace
-	// whitespace
-	// get key
-	// whitespace
-	// comma
-	// value
-	// closing curly brace
 	p.skipWhiteSpace()
 	defer p.skipWhiteSpace()
 
