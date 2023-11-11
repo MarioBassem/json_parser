@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -36,6 +35,9 @@ func (p *Parser) getObject() (map[string]interface{}, error) {
 	// comma
 	// value
 	// closing curly brace
+	p.skipWhiteSpace()
+	defer p.skipWhiteSpace()
+
 	obj := map[string]interface{}{}
 	if err := p.skipByte('{'); err != nil {
 		return nil, err
@@ -77,6 +79,7 @@ func (p *Parser) getObject() (map[string]interface{}, error) {
 
 func (p *Parser) getString() (string, error) {
 	p.skipWhiteSpace()
+	defer p.skipWhiteSpace()
 
 	if err := p.skipByte('"'); err != nil {
 		return "", err
@@ -100,7 +103,29 @@ func (p *Parser) getString() (string, error) {
 }
 
 func (p *Parser) skipWhiteSpace() {
-	p.b = bytes.TrimLeft(p.b, " \t\r\n")
+	cut := 0
+	for i := 0; i < len(p.b); i++ {
+		c1 := p.b[i]
+		if c1 == ' ' || c1 == '\t' || c1 == '\n' || c1 == '\r' {
+			cut++
+			continue
+		}
+
+		if len(p.b) == 1 {
+			break
+		}
+
+		c2 := p.b[i+1]
+		if c1 == '\\' && (c2 == 't' || c2 == 'n' || c2 == 'r') {
+			cut += 2
+			i++
+			continue
+		}
+
+		break
+	}
+
+	p.b = p.b[cut:]
 }
 
 func (p *Parser) skipByte(b byte) error {
@@ -109,7 +134,7 @@ func (p *Parser) skipByte(b byte) error {
 	}
 
 	if p.b[0] != b {
-		return fmt.Errorf("%w: looking for '%c", ErrInvalidCharacter, b)
+		return fmt.Errorf("%w: looking for '%c'", ErrInvalidCharacter, b)
 	}
 
 	p.b = p.b[1:]
@@ -191,6 +216,7 @@ func (p *Parser) getHexCode() (uint16, error) {
 
 func (p *Parser) getValue() (interface{}, error) {
 	p.skipWhiteSpace()
+	defer p.skipWhiteSpace()
 
 	if len(p.b) == 0 {
 		return nil, ErrUnExpectedEndOfText
@@ -250,12 +276,13 @@ func (p *Parser) canSkipVal(val []byte) bool {
 }
 
 func (p *Parser) getArray() ([]interface{}, error) {
+	p.skipWhiteSpace()
+	defer p.skipWhiteSpace()
+
 	arr := []interface{}{}
 	if err := p.skipByte('['); err != nil {
 		return nil, err
 	}
-
-	p.skipWhiteSpace()
 
 	err := p.skipByte(']')
 	if err == nil {
@@ -288,6 +315,9 @@ func (p *Parser) getArray() ([]interface{}, error) {
 }
 
 func (p *Parser) getNumber() (float64, error) {
+	p.skipWhiteSpace()
+	defer p.skipWhiteSpace()
+
 	numStr := strings.Builder{}
 	for {
 		c, _, err := p.getChar()
@@ -298,7 +328,7 @@ func (p *Parser) getNumber() (float64, error) {
 		_, _ = numStr.WriteString(c)
 
 		if len(p.b) == 0 {
-			return 0, ErrUnExpectedEndOfText
+			break
 		}
 
 		next := p.b[0]
