@@ -21,23 +21,23 @@ func TestGetNumber(t *testing.T) {
 			expected: false,
 			value:    0,
 		},
-		"not_ended": {
-			input:    "1234",
-			expected: false,
-			value:    0,
+		"valid_with_space": {
+			input:    "1234 ",
+			expected: true,
+			value:    1234,
 		},
 		"alphabetic": {
-			input:    "abcd ",
+			input:    "abcd",
 			expected: false,
 			value:    0,
 		},
 		"alpha_numeric": {
-			input:    "12ab34 ",
+			input:    "12ab34",
 			expected: true,
 			value:    12,
 		},
 		"plus_zero": {
-			input:    "+0 ",
+			input:    "+0",
 			expected: false,
 			value:    0,
 		},
@@ -47,17 +47,17 @@ func TestGetNumber(t *testing.T) {
 			value:    0,
 		},
 		"multiple_decimal_points": {
-			input:    "1.2.3 ",
+			input:    "1.2.3",
 			expected: false,
 			value:    0,
 		},
 		"valid_int": {
-			input:    "1234 ",
+			input:    "1234",
 			expected: true,
 			value:    1234,
 		},
 		"valid_float": {
-			input:    "1.1234e5 ",
+			input:    "1.1234e5",
 			expected: true,
 			value:    1.1234e5,
 		},
@@ -182,6 +182,11 @@ func TestGetValue(t *testing.T) {
 			expected: true,
 			value:    -0.234e5,
 		},
+		"valid_object": {
+			input:    `{"key1": "value1"}`,
+			expected: true,
+			value:    map[string]interface{}{"key1": "value1"},
+		},
 	}
 
 	for name, tc := range tests {
@@ -191,8 +196,77 @@ func TestGetValue(t *testing.T) {
 			if tc.expected {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.value, val)
+			} else {
+				assert.Error(t, err)
 			}
 
+		})
+	}
+}
+
+func TestGetArray(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected bool
+		value    []interface{}
+	}{
+		"empty": {
+			input:    "",
+			expected: false,
+			value:    nil,
+		},
+		"started_not_ended": {
+			input:    "[1,2,3",
+			expected: false,
+			value:    nil,
+		},
+		"not_started_ended": {
+			input:    "1,2,3]",
+			expected: false,
+			value:    nil,
+		},
+		"missing_comma": {
+			input:    "[1,2{\"hello\":\"world\"}]",
+			expected: false,
+			value:    nil,
+		},
+		"valid_number_array": {
+			input:    "[1,2,3]",
+			expected: true,
+			value:    []interface{}{float64(1), float64(2), float64(3)},
+		},
+		"valid_string_array": {
+			input:    `["hello", "world"]`,
+			expected: true,
+			value:    []interface{}{"hello", "world"},
+		},
+		"valid_object_array": {
+			input:    `[{\t"key1": "val1"},    {   "key2": 1234}]`,
+			expected: true,
+			value:    []interface{}{map[string]interface{}{"key1": "val1"}, map[string]interface{}{"key2": float64(1234)}},
+		},
+		"valid_mixed_array": {
+			input:    `[1234, "string value", true, null]`,
+			expected: true,
+			value:    []interface{}{float64(1234), "string value", true, nil},
+		},
+		"valid_nested_array": {
+			input:    `[1,2,[1,2,3]]`,
+			expected: true,
+			value:    []interface{}{float64(1), float64(2), []interface{}{float64(1), float64(2), float64(3)}},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := Parser{b: []byte(tc.input)}
+			val, err := p.getArray()
+			if tc.expected {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.value, val)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }
