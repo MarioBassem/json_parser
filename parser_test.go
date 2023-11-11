@@ -1,14 +1,79 @@
 package parser
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestParse(t *testing.T) {
+func TestParse(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected bool
+		value    map[string]interface{}
+	}{
+		"empty": {
+			input:    "",
+			expected: false,
+			value:    nil,
+		},
+		"not_ended": {
+			input:    `{"key1":"val1"`,
+			expected: false,
+			value:    nil,
+		},
+		"not_started": {
+			input:    `"key1":"val1"}`,
+			expected: false,
+			value:    nil,
+		},
+		"missing_colon": {
+			input:    `{"key1" "val1"}`,
+			expected: false,
+			value:    nil,
+		},
+		"valid_string_val": {
+			input:    `{"key1": "v\tal1"}`,
+			expected: true,
+			value:    map[string]interface{}{"key1": "val1"},
+		},
+		"non_string_key": {
+			input:    `{ab123: "val1"}`,
+			expected: false,
+			value:    nil,
+		},
+		"valid_number_val": {
+			input:    `{"key2":234.512}`,
+			expected: true,
+			value:    map[string]interface{}{"key2": float64(234.512)},
+		},
+		"valid_array_val": {
+			input:    `{   "key\t1":[1,2,3]}`,
+			expected: true,
+			value:    map[string]interface{}{"key1": []interface{}{float64(1), float64(2), float64(3)}},
+		},
+		"text_after_top_level_struct": {
+			input:    `{"key":"val"} hi`,
+			expected: false,
+			value:    nil,
+		},
+	}
 
-// }
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			expectedVal := map[string]interface{}{}
+			expectedErr := json.Unmarshal([]byte(tc.input), &expectedVal)
+			gotVal, gotErr := Parse([]byte(tc.input))
+			if expectedErr == nil {
+				assert.NoError(t, gotErr)
+				assert.Equal(t, expectedVal, gotVal)
+			} else {
+				assert.Error(t, gotErr)
+			}
+		})
+	}
+}
 
 func TestGetNumber(t *testing.T) {
 	tests := map[string]struct {
