@@ -18,16 +18,16 @@ var (
 	nullVal  = []byte("null")
 )
 
-type Parser struct {
+type parser struct {
 	b []byte
 }
 
 func Parse(b []byte) (map[string]interface{}, error) {
-	p := Parser{b: b}
+	p := parser{b: b}
 	return p.getObject()
 }
 
-func (p *Parser) getObject() (map[string]interface{}, error) {
+func (p *parser) getObject() (map[string]interface{}, error) {
 	// get openning curly brace
 	// whitespace
 	// get key
@@ -77,7 +77,7 @@ func (p *Parser) getObject() (map[string]interface{}, error) {
 	return obj, nil
 }
 
-func (p *Parser) getString() (string, error) {
+func (p *parser) getString() (string, error) {
 	p.skipWhiteSpace()
 	defer p.skipWhiteSpace()
 
@@ -102,7 +102,7 @@ func (p *Parser) getString() (string, error) {
 	return key.String(), nil
 }
 
-func (p *Parser) skipWhiteSpace() {
+func (p *parser) skipWhiteSpace() {
 	cut := 0
 	for i := 0; i < len(p.b); i++ {
 		c1 := p.b[i]
@@ -128,7 +128,7 @@ func (p *Parser) skipWhiteSpace() {
 	p.b = p.b[cut:]
 }
 
-func (p *Parser) skipByte(b byte) error {
+func (p *parser) skipByte(b byte) error {
 	if len(p.b) == 0 {
 		return fmt.Errorf("%w: looking for '%c'", ErrUnExpectedEndOfText, b)
 	}
@@ -141,7 +141,7 @@ func (p *Parser) skipByte(b byte) error {
 	return nil
 }
 
-func (p *Parser) getChar() (string, bool, error) {
+func (p *parser) getChar() (string, bool, error) {
 	if len(p.b) == 0 {
 		return "", false, ErrUnExpectedEndOfText
 	}
@@ -161,7 +161,7 @@ func (p *Parser) getChar() (string, bool, error) {
 }
 
 // getEscapedValue validates escape sequence, and returns the escaped value
-func (p *Parser) getEscapedValue() (string, error) {
+func (p *parser) getEscapedValue() (string, error) {
 	if len(p.b) == 0 {
 		return "", ErrUnExpectedEndOfText
 	}
@@ -198,7 +198,7 @@ func (p *Parser) getEscapedValue() (string, error) {
 	}
 }
 
-func (p *Parser) getHexCode() (uint16, error) {
+func (p *parser) getHexCode() (uint16, error) {
 	if len(p.b) < 4 {
 		return 0, ErrUnExpectedEndOfText
 	}
@@ -214,7 +214,7 @@ func (p *Parser) getHexCode() (uint16, error) {
 	return uint16(decimalValue), nil
 }
 
-func (p *Parser) getValue() (interface{}, error) {
+func (p *parser) getValue() (interface{}, error) {
 	p.skipWhiteSpace()
 	defer p.skipWhiteSpace()
 
@@ -256,7 +256,7 @@ func (p *Parser) getValue() (interface{}, error) {
 	return nil, fmt.Errorf("%w: unexpected '%c'", ErrInvalidCharacter, p.b[0])
 }
 
-func (p *Parser) canSkipVal(val []byte) bool {
+func (p *parser) canSkipVal(val []byte) bool {
 	if len(p.b) <= len(val) {
 		return false
 	}
@@ -275,7 +275,7 @@ func (p *Parser) canSkipVal(val []byte) bool {
 	return false
 }
 
-func (p *Parser) getArray() ([]interface{}, error) {
+func (p *parser) getArray() ([]interface{}, error) {
 	p.skipWhiteSpace()
 	defer p.skipWhiteSpace()
 
@@ -314,7 +314,7 @@ func (p *Parser) getArray() ([]interface{}, error) {
 	return arr, nil
 }
 
-func (p *Parser) getNumber() (float64, error) {
+func (p *parser) getNumber() (float64, error) {
 	p.skipWhiteSpace()
 	defer p.skipWhiteSpace()
 

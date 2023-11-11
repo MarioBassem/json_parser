@@ -65,7 +65,7 @@ func TestGetNumber(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			p := Parser{b: []byte(tc.input)}
+			p := parser{b: []byte(tc.input)}
 			num, err := p.getNumber()
 			if tc.expected {
 				assert.NoError(t, err)
@@ -115,7 +115,7 @@ func TestGetString(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			p := Parser{b: []byte(tc.input)}
+			p := parser{b: []byte(tc.input)}
 			str, err := p.getString()
 			if tc.expected {
 				assert.NoError(t, err)
@@ -191,7 +191,7 @@ func TestGetValue(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			p := Parser{b: []byte(tc.input)}
+			p := parser{b: []byte(tc.input)}
 			val, err := p.getValue()
 			if tc.expected {
 				assert.NoError(t, err)
@@ -259,7 +259,7 @@ func TestGetArray(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			p := Parser{b: []byte(tc.input)}
+			p := parser{b: []byte(tc.input)}
 			val, err := p.getArray()
 			if tc.expected {
 				assert.NoError(t, err)
