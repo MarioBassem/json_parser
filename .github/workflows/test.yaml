@@ -1,4 +1,4 @@
-name: Test wc
+name: Test json_parser
 
 on:
   push:

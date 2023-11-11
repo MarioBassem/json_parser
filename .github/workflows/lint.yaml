@@ -1,4 +1,4 @@
-name: Lint wc
+name: Lint json_parser
 
 on:
   push:
